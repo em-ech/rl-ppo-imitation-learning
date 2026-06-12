@@ -30,9 +30,11 @@ cells = [
     code("REPO = 'https://github.com/em-ech/rl-ppo-imitation-learning.git'\n"
          "CODE_DIR = '/content/GroupProject'\n"
          "import os, sys, shutil\n"
+         "os.chdir('/content')  # never stand inside the dir we are about to delete\n"
          "if os.path.exists(CODE_DIR):\n"
          "    shutil.rmtree(CODE_DIR)\n"
          "!git clone -q {REPO} {CODE_DIR}\n"
+         "assert os.path.isdir(CODE_DIR), 'clone failed'\n"
          "sys.path.insert(0, CODE_DIR)\n"
          "os.chdir(CODE_DIR)\n"
          "print('code in', CODE_DIR, '->', sorted(os.listdir(CODE_DIR))[:8])"),
