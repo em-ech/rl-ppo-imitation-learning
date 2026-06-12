@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Artifacts (large, regenerable)
+models/
+data/
+outputs/
+videos/
+logs/
+
+# Keep directory structure
+!models/.gitkeep
+!data/.gitkeep
+!outputs/.gitkeep
+!videos/.gitkeep
+!logs/.gitkeep
+
+# Build artifact (GitHub replaces the Drive-zip workflow) and the assignment PDF
+project_code.zip
+project_code/
+*.pdf
+
+# OS and local tooling
+.DS_Store
+.claude/
