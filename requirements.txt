@@ -2,9 +2,14 @@
 # Install:  uv pip install -r requirements.txt   (with .venv active)
 
 # imitation 1.0.0 pins gymnasium <1.0, so we use the 0.29 line (v4 envs present)
-stable-baselines3[extra]==2.3.2
+# Plain SB3 (no [extra]): [extra] drags in shimmy[atari]/ale-py, which has no
+# wheel for Colab's Python and is irrelevant to MuJoCo. tqdm+rich give the
+# progress bar; tensorboard is pinned below.
+stable-baselines3==2.3.2
 gymnasium[mujoco]==0.29.1
 imitation==1.0.0
+tqdm==4.68.2
+rich==15.0.0
 torch==2.5.1
 tensorboard==2.18.0
 matplotlib==3.9.2
