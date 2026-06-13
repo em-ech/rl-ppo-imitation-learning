@@ -70,11 +70,19 @@ cells = [
          "for e in ['Walker2d-v4', 'Ant-v4']:\n"
          "    gym.make(e).reset(seed=0); print('ok', e)"),
     md("## 5. Stage 1 - PPO experts (M1)\n\n"
-       "Walker2d with the validated config; Ant with VecNormalize + a larger "
-       "budget. Each writes best_model (and vecnormalize.pkl for Ant) to Drive. "
-       "The `cd` prefix makes each cell independent of the working directory."),
+       "Walker2d with the validated config. For Ant, the faithful rl-zoo3 "
+       "Optuna-tuned profile (`tuned_ant`, n_envs=1, ~1e7 steps) is the best shot "
+       "at the 4000 target but is slow (roughly 18h on Colab). If the run is "
+       "interrupted, re-run the same cell with `resume` appended: it continues "
+       "from the last 100k checkpoint on Drive instead of restarting. Each run "
+       "writes best_model (and vecnormalize.pkl for Ant) to Drive."),
     code("!cd /content/GroupProject && python train_expert.py Walker2d-v4 4000000 4"),
-    code("!cd /content/GroupProject && python train_expert.py Ant-v4 8000000 8 norm"),
+    code("# Faithful rl-zoo3 tuned Ant (slow). Append 'resume' to continue after a disconnect.\n"
+         "!cd /content/GroupProject && python train_expert.py Ant-v4 10000000 1 norm tuned_ant\n"
+         "# resume:\n"
+         "# !cd /content/GroupProject && python train_expert.py Ant-v4 10000000 1 norm tuned_ant resume\n"
+         "# Faster fallback (our config, ~8h, reached ~2850): \n"
+         "# !cd /content/GroupProject && python train_expert.py Ant-v4 16000000 8 norm"),
     md("## 6. Stage 2 - demonstration collection + EDA + quality gate (M2)"),
     code("!cd /content/GroupProject && python collect_demos.py Walker2d-v4 100\n"
          "!cd /content/GroupProject && python collect_demos.py Ant-v4 100"),

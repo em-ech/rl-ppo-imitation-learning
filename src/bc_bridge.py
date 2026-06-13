@@ -13,8 +13,15 @@ from . import config
 
 
 def _sb3_device(device: str) -> str:
-    """SB3 and imitation are not MPS-safe; their MLPs are tiny and CPU-bound."""
-    return "cpu" if device == "mps" else device
+    """Force CPU for the imitation library + SB3 paths.
+
+    The imitation BC has a device-placement bug (demo tensors stay on CPU while
+    the policy is on the accelerator) that breaks on both MPS and CUDA. These
+    MLPs are tiny and CPU-bound anyway (SB3 itself advises CPU for MLP PPO), so
+    we always run them on CPU. The from-scratch BC (bc_scratch) still uses the
+    GPU.
+    """
+    return "cpu"
 
 
 def build_transitions(obs: np.ndarray, acts: np.ndarray):
