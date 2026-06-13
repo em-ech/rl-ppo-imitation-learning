@@ -45,9 +45,17 @@ cells = [
          "os.makedirs(DRIVE_ROOT, exist_ok=True)\n"
          "print('Drive root:', DRIVE_ROOT)"),
     md("## 3. Install pinned dependencies\n\n"
-       "Takes a few minutes. Restart the runtime only if Colab prompts about a "
-       "numpy/torch version change."),
-    code("!pip -q install -r /content/GroupProject/requirements.txt"),
+       "This pins numpy 1.26 (required by gymnasium 0.29, which imitation 1.0 "
+       "forces), downgrading Colab's preinstalled numpy 2.x. **After this cell "
+       "finishes you MUST restart the runtime** (Runtime -> Restart session) for "
+       "the downgrade to take effect, then re-run cells 1-2 and continue from "
+       "cell 4. Skip this cell on the second pass (packages persist across a "
+       "restart). The long 'dependency resolver' conflict warnings about "
+       "jax/transformers/opencv/torchvision are harmless: this project does not "
+       "use those packages."),
+    code("!pip -q install -r /content/GroupProject/requirements.txt\n"
+         "print('\\nInstall done. NOW: Runtime -> Restart session, then re-run '\n"
+         "      'cells 1-2 and continue from cell 4.')"),
     md("## 4. Configure persistence + sanity check\n\n"
        "Pointing `PROJECT_DATA_ROOT` at Drive sends models/, data/, outputs/, "
        "logs/ to Drive so they survive disconnects. `os.environ` changes are "
