@@ -47,12 +47,14 @@ cells = [
     md("## 3. Install pinned dependencies\n\n"
        "Takes a few minutes. Restart the runtime only if Colab prompts about a "
        "numpy/torch version change."),
-    code("!pip -q install -r requirements.txt"),
+    code("!pip -q install -r /content/GroupProject/requirements.txt"),
     md("## 4. Configure persistence + sanity check\n\n"
        "Pointing `PROJECT_DATA_ROOT` at Drive sends models/, data/, outputs/, "
        "logs/ to Drive so they survive disconnects. `os.environ` changes are "
        "inherited by the `!python ...` calls below."),
-    code("os.environ['PROJECT_DATA_ROOT'] = DRIVE_ROOT\n"
+    code("import sys, os  # re-assert in case the runtime was restarted\n"
+         "sys.path.insert(0, '/content/GroupProject'); os.chdir('/content/GroupProject')\n"
+         "os.environ['PROJECT_DATA_ROOT'] = DRIVE_ROOT\n"
          "from src import config\n"
          "print('device:', config.device())\n"
          "print('models ->', config.MODELS_DIR)\n"
@@ -61,19 +63,20 @@ cells = [
          "    gym.make(e).reset(seed=0); print('ok', e)"),
     md("## 5. Stage 1 - PPO experts (M1)\n\n"
        "Walker2d with the validated config; Ant with VecNormalize + a larger "
-       "budget. Each writes best_model (and vecnormalize.pkl for Ant) to Drive."),
-    code("!python train_expert.py Walker2d-v4 4000000 4"),
-    code("!python train_expert.py Ant-v4 8000000 8 norm"),
+       "budget. Each writes best_model (and vecnormalize.pkl for Ant) to Drive. "
+       "The `cd` prefix makes each cell independent of the working directory."),
+    code("!cd /content/GroupProject && python train_expert.py Walker2d-v4 4000000 4"),
+    code("!cd /content/GroupProject && python train_expert.py Ant-v4 8000000 8 norm"),
     md("## 6. Stage 2 - demonstration collection + EDA + quality gate (M2)"),
-    code("!python collect_demos.py Walker2d-v4 100\n"
-         "!python collect_demos.py Ant-v4 100"),
+    code("!cd /content/GroupProject && python collect_demos.py Walker2d-v4 100\n"
+         "!cd /content/GroupProject && python collect_demos.py Ant-v4 100"),
     md("## 7. Stage 3 - BC experiments (M3, M4, M5) and multi-seed arch sweep (M8)\n\n"
        "Use a GPU runtime here for the from-scratch BC runs."),
-    code("!python bc_experiments.py Walker2d-v4\n"
-         "!python arch_sweep.py Walker2d-v4\n"
+    code("!cd /content/GroupProject && python bc_experiments.py Walker2d-v4\n"
+         "!cd /content/GroupProject && python arch_sweep.py Walker2d-v4\n"
          "# repeat for Ant once its expert and dataset are ready:\n"
-         "# !python bc_experiments.py Ant-v4\n"
-         "# !python arch_sweep.py Ant-v4"),
+         "# !cd /content/GroupProject && python bc_experiments.py Ant-v4\n"
+         "# !cd /content/GroupProject && python arch_sweep.py Ant-v4"),
     md("## 8. Stages 4-5 - DAgger and pretraining\n\n"
        "Run `notebooks/04_dagger.ipynb` and `notebooks/05_pretraining.ipynb` "
        "(still in development). All outputs already persist to Drive via "
