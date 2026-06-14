@@ -107,7 +107,7 @@ expert gives cleaner full-length demos. Best architecture differs by environment
 
 - **`tuned_walker` FAILED: 1640 +/- 686** at 5M, far below our generic config's
   4616 and even the 3000 threshold. The same rl-zoo3 Optuna approach that took Ant
-  from 2850 to 6293 made Walker2d *worse*. So you cannot transfer "use the tuned
+  from 2850 to 6293 made Walker2d _worse_. So you cannot transfer "use the tuned
   config" across environments: Ant wants the low-LR tuned profile, Walker2d wants
   the standard config (n_steps 2048, batch 64, lr 3e-4 linear). Strong report point
   for RQ6 / hyperparameter discussion.
@@ -125,8 +125,46 @@ expert gives cleaner full-length demos. Best architecture differs by environment
   remain because they are part of reproduction. `DECISIONS.md` and `PLAN.md` kept at
   root as project docs.
 
+## Walker2d pushed to goal; BC normalization bug found and fixed
+
+- **Walker2d generic-config + VecNormalize + 8M = 6043** (deterministic collection
+  mean over 100 eps, gate 97%). Meets the 6000 goal. The `tuned_walker` Optuna
+  profile had failed (1640); the generic config plus normalization is the winner.
+  So normalization was the key lever for BOTH envs.
+- **BC bug:** a VecNormalize-trained expert consumes normalised observations, but
+  the BC students were learning from raw obs with no input normalisation, so they
+  could not fit (Walker2d-6043 library BC 1246, scratch 868). Fixed: BC now
+  normalises obs via the expert's stats in training and eval (`eval.load_obs_normalizer`).
+
+## BC suite results (both Walker2d experts + Ant, 5 seeds where applicable)
+
+Main library/scratch BC are at 50 epochs; the epoch sweep shows 50 undertrains the
+aggressive normalised experts.
+
+| Metric | Walker2d-6043 | Walker2d-4627 | Ant-6293 |
+|---|---|---|---|
+| Library BC (50ep) | 2695 | 4281 (91%) | 5540 (88%) |
+| Scratch BC (50ep) | 2446 | 3249 | 6137 (99%, MSE 5e-4) |
+| Epoch sweep peak | 4864 @100ep (80%) | 4640 @50ep | 6617 @50ep |
+| Ablation 100 eps | 2275 | 2216 | 5848 |
+| Arch winner (5 seeds) | large 3159 | large 4055 | skip 6148 (all ~5700-6150) |
+
+Key findings:
+- **Epoch budget is expert-specific (M3).** Ant converges by ~5 epochs; Walker2d-4627
+  by ~50; the aggressive Walker2d-6043 keeps improving to 100 (2747 -> 4864). The
+  earlier "47% gap" was mostly undertraining, not an imitability ceiling.
+- **Expert strength vs imitability (both-experts contrast).** The gentler 4627
+  expert clones easily at low epochs (91%); the stronger 6043 expert needs more
+  epochs but reaches ~80%. A real tradeoff for the report.
+- **Ant is highly imitable**: scratch BC ~98% of expert, near-perfect fit (MSE 5e-4),
+  beating the library BC.
+- **Architecture (RQ4) is env-dependent**: capacity matters on Walker2d (large wins);
+  on Ant all architectures cluster tightly (5707-6148), skip marginally best.
+
+Open refinement: for the headline BC numbers, cite the epoch-sweep-informed value
+for Walker2d-6043 (~4864 at 100 epochs), or bump the default BC epochs.
+
 ## Still to do
 
 DAgger (M7), Stage 5 pretraining comparison, M6 side-by-side video, notebook +
-presentation assembly. Both environments. Re-collect Walker2d demos and re-run
-Walker2d BC once the tuned expert finishes (new expert uses VecNormalize).
+presentation assembly. Both environments. (Paused here for review, per request.)
