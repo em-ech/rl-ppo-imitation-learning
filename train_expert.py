@@ -61,6 +61,10 @@ PROFILES = {
                       learning_rate=1.90609e-05, clip_range=0.1, gamma=0.98,
                       gae_lambda=0.8, ent_coef=4.9646e-07, vf_coef=0.677239,
                       max_grad_norm=0.6),
+    "tuned_walker": dict(n_steps=512, batch_size=32, n_epochs=20,
+                         learning_rate=5.05041e-05, clip_range=0.1, gamma=0.99,
+                         gae_lambda=0.95, ent_coef=0.000585045, vf_coef=0.871923,
+                         max_grad_norm=1.0),
 }
 
 
