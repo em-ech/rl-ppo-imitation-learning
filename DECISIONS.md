@@ -103,12 +103,18 @@ expert on Ant (99%) than Walker2d (91%) with lower variance, because the tuned A
 expert gives cleaner full-length demos. Best architecture differs by environment
 (large for Walker2d, skip for Ant), so RQ4 is not universal.
 
-## In progress
+## Tuned configs are environment-specific (key finding)
 
-- **Walker2d expert retrain with `tuned_walker`** (5M, n_envs=1, norm), aiming for
-  the 6000-8000 goal. Generic Walker2d expert (4616) and its dataset are backed up
-  as `*_generic_backup`. rl-zoo3 Walker2d PPO realistically tops out ~5000-6000,
-  so 6000 is reachable but 8000 is unlikely with PPO.
+- **`tuned_walker` FAILED: 1640 +/- 686** at 5M, far below our generic config's
+  4616 and even the 3000 threshold. The same rl-zoo3 Optuna approach that took Ant
+  from 2850 to 6293 made Walker2d *worse*. So you cannot transfer "use the tuned
+  config" across environments: Ant wants the low-LR tuned profile, Walker2d wants
+  the standard config (n_steps 2048, batch 64, lr 3e-4 linear). Strong report point
+  for RQ6 / hyperparameter discussion.
+- **Restored** the generic 4616 expert as active (verified 4627 +/- 953); the bad
+  run is kept as `models/ppo_expert_Walker2d-v4_tuned1640` for the record.
+- Walker2d best remains 4627. The 6000-8000 goal is above the realistic PPO ceiling
+  for Walker2d; the untried lever is generic-config + VecNormalize + more steps.
 
 ## Repo hygiene
 
