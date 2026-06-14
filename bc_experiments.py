@@ -19,7 +19,9 @@ from src import bc_bridge, bc_scratch, collect, config, eval, plotting, seeding
 ENV_ID = sys.argv[1] if len(sys.argv) > 1 else "Walker2d-v4"
 DATA_KEY = sys.argv[2] if len(sys.argv) > 2 else ENV_ID
 DEVICE = config.device()
-EPOCHS, LR, BATCH = 50, 1e-4, 256
+# Scratch BC early-stops with a 150-epoch ceiling; the library BC cannot
+# early-stop, so it uses a fixed budget adequate for the hardest expert.
+LIB_EPOCHS, SCRATCH_EPOCHS, LR, BATCH = 100, 150, 1e-4, 256
 seeding.set_seed(0)
 
 data = collect.load(config.DATA_DIR / DATA_KEY)
@@ -43,16 +45,16 @@ print(f"[bc] env={ENV_ID} data_key={DATA_KEY} device={DEVICE} "
 # while the scratch version minimises pure MSE to the action. Same data and
 # budget; the objective differs by construction. We document, not hide, this.
 trainer, _ = bc_bridge.train_bc_imitation(N(obs), acts, ENV_ID, seed=0,
-                                          n_epochs=EPOCHS, batch_size=BATCH,
+                                          n_epochs=LIB_EPOCHS, batch_size=BATCH,
                                           lr=LR, device=DEVICE)
 lib_mean, lib_std = eval.evaluate(trainer.policy, ENV_ID, vecnorm_path=VN_PATH)
 print(f"[bc] library  BC: {lib_mean:.1f} +/- {lib_std:.1f}", flush=True)
 
-student, hist = bc_scratch.train_bc(N(obs), acts, seed=0, n_epochs=EPOCHS,
+student, hist = bc_scratch.train_bc(N(obs), acts, seed=0, n_epochs=SCRATCH_EPOCHS,
                                     batch_size=BATCH, lr=LR, device=DEVICE)
 scr_mean, scr_std = eval.evaluate_torch(student, ENV_ID, DEVICE, normalizer=norm)
 print(f"[bc] scratch  BC: {scr_mean:.1f} +/- {scr_std:.1f} "
-      f"(final val MSE {hist['val'][-1]:.4f})", flush=True)
+      f"(best epoch {hist['best_epoch']}, val MSE {min(hist['val']):.4f})", flush=True)
 
 results["library_bc"] = {"mean": lib_mean, "std": lib_std}
 results["scratch_bc"] = {"mean": scr_mean, "std": scr_std,
@@ -87,7 +89,7 @@ for n_ep in episode_counts:
     sub_obs, sub_acts = collect.subset(data, n_ep)
     runs = []
     for seed in config.SEEDS:
-        s, _ = bc_scratch.train_bc(N(sub_obs), sub_acts, seed=seed, n_epochs=EPOCHS,
+        s, _ = bc_scratch.train_bc(N(sub_obs), sub_acts, seed=seed, n_epochs=SCRATCH_EPOCHS,
                                    batch_size=BATCH, lr=LR, device=DEVICE)
         m, _ = eval.evaluate_torch(s, ENV_ID, DEVICE, n_episodes=10, normalizer=norm)
         runs.append(m)
@@ -108,7 +110,7 @@ archs = {"small (64,64)": dict(hidden=(64, 64)),
          "skip (256,256)": dict(hidden=(256, 256), skip=True)}
 results["architecture"] = {}
 for name, kw in archs.items():
-    s, _ = bc_scratch.train_bc(N(obs), acts, seed=0, n_epochs=EPOCHS,
+    s, _ = bc_scratch.train_bc(N(obs), acts, seed=0, n_epochs=SCRATCH_EPOCHS,
                                batch_size=BATCH, lr=LR, device=DEVICE, **kw)
     m, sd = eval.evaluate_torch(s, ENV_ID, DEVICE, normalizer=norm)
     results["architecture"][name] = {"mean": m, "std": sd}

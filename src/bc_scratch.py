@@ -36,14 +36,21 @@ class StudentPolicy(nn.Module):
 
 
 def train_bc(obs: np.ndarray, acts: np.ndarray, *, seed: int = 0,
-             hidden=(256, 256), skip: bool = False, n_epochs: int = 50,
+             hidden=(256, 256), skip: bool = False, n_epochs: int = 150,
              batch_size: int = 256, lr: float = 1e-4, device: str = "cpu",
-             val_frac: float = 0.1, normalize: bool = False):
+             val_frac: float = 0.1, normalize: bool = False, patience: int = 15):
     """Train a StudentPolicy by MSE regression to expert actions.
+
+    Uses early stopping: n_epochs is the ceiling, training stops if the validation
+    loss has not improved for `patience` epochs, and the returned model is the one
+    at minimum validation loss (spec-recommended). This auto-tunes the epoch budget
+    per dataset, more for hard experts, fewer for easy ones.
 
     normalize=True standardises observations to zero mean / unit variance (E2);
     the fitted mean/std are returned so deployment can reuse them.
     """
+    import copy
+
     torch.manual_seed(seed)
     obs = np.asarray(obs, dtype=np.float32)
     acts = np.asarray(acts, dtype=np.float32)
@@ -68,7 +75,8 @@ def train_bc(obs: np.ndarray, acts: np.ndarray, *, seed: int = 0,
     crit = nn.MSELoss()
 
     train_losses, val_losses = [], []
-    for _ in range(n_epochs):
+    best_val, best_state, best_epoch, since = float("inf"), None, 0, 0
+    for epoch in range(n_epochs):
         model.train()
         running = 0.0
         for ob, ac in train_loader:
@@ -88,5 +96,16 @@ def train_bc(obs: np.ndarray, acts: np.ndarray, *, seed: int = 0,
                 vloss += crit(model(ob), ac).item() * len(ob)
         val_losses.append(vloss / max(n_val, 1))
 
-    return model, {"train": train_losses, "val": val_losses,
+        # Early stopping on validation loss.
+        if n_val > 0 and val_losses[-1] < best_val:
+            best_val, best_epoch, since = val_losses[-1], epoch, 0
+            best_state = copy.deepcopy(model.state_dict())
+        else:
+            since += 1
+            if since >= patience:
+                break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+    return model, {"train": train_losses, "val": val_losses, "best_epoch": best_epoch,
                    "obs_mean": obs_mean, "obs_std": obs_std}

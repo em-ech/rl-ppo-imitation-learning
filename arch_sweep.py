@@ -15,7 +15,7 @@ from src import bc_scratch, collect, config, eval, plotting, seeding
 ENV_ID = sys.argv[1] if len(sys.argv) > 1 else "Walker2d-v4"
 DATA_KEY = sys.argv[2] if len(sys.argv) > 2 else ENV_ID
 DEVICE = config.device()
-EPOCHS, LR, BATCH = 50, 1e-4, 256
+EPOCHS, LR, BATCH = 150, 1e-4, 256  # ceiling; bc_scratch early-stops
 seeding.set_seed(0)
 
 data = collect.load(config.DATA_DIR / DATA_KEY)
