@@ -43,6 +43,6 @@ print(f"[collect] mean return {r.mean():.1f} +/- {r.std():.1f} | "
 print(f"[collect] quality gate: {100*frac:.1f}% above 2/3-mean ({thr:.0f}) -> "
       f"{'PASS' if frac >= 0.9 else 'FAIL'}", flush=True)
 
-plotting.save(plotting.dataset_eda(r, data["actions"]),
+plotting.save(plotting.dataset_eda(r, data["actions"], data["episode_lengths"]),
               config.OUTPUTS_DIR / f"dataset_analysis_{ENV_ID}.png")
 print(f"[collect] saved EDA -> outputs/dataset_analysis_{ENV_ID}.png", flush=True)

@@ -22,9 +22,11 @@ def learning_curves(train, val, title="Behavioural Cloning Learning Curves"):
     return fig
 
 
-def dataset_eda(returns, actions):
-    """Return-distribution and per-joint action-distribution panels (spec 5.3)."""
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+def dataset_eda(returns, actions, lengths=None):
+    """EDA panels: return distribution, per-joint action distribution, and
+    (if lengths given) the trajectory-length histogram (spec 5.3 / 9.2)."""
+    n = 3 if lengths is not None else 2
+    fig, axes = plt.subplots(1, n, figsize=(6 * n, 4))
     axes[0].hist(returns, bins=20, color="steelblue", edgecolor="white")
     axes[0].set_title("Expert Episode Return Distribution")
     axes[0].set_xlabel("Return"); axes[0].set_ylabel("Count")
@@ -32,6 +34,21 @@ def dataset_eda(returns, actions):
         axes[1].hist(actions[:, j], bins=40, alpha=0.4, label=f"Joint {j}")
     axes[1].set_title("Action Distribution per Joint")
     axes[1].set_xlabel("Torque"); axes[1].legend(fontsize=7)
+    if lengths is not None:
+        axes[2].hist(lengths, bins=20, color="seagreen", edgecolor="white")
+        axes[2].set_title("Trajectory Length Histogram")
+        axes[2].set_xlabel("Episode length (steps)"); axes[2].set_ylabel("Count")
+    return fig
+
+
+def epoch_curve(epochs, returns, expert_mean, title="BC Return vs Training Epochs"):
+    """Library-BC performance as a function of training epochs (M3)."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(epochs, returns, marker="o", color="steelblue", label="BC student")
+    ax.axhline(expert_mean, color="green", linestyle="--",
+               label=f"Expert ({expert_mean:.0f})")
+    ax.set_xlabel("Training Epochs"); ax.set_ylabel("Mean Evaluation Return")
+    ax.set_title(title); ax.legend(); ax.grid(True, alpha=0.3)
     return fig
 
 
