@@ -14,6 +14,12 @@ import re
 import sys
 import time
 
+import torch
+# SB3 PPO with a small MLP on CPU is far faster single-threaded: with many
+# threads, BLAS oversubscription on the tiny net thrashes (observed ~9 cores at
+# <40 steps/s for single-env Ant). One thread avoids the contention.
+torch.set_num_threads(1)
+
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import (
     BaseCallback, CheckpointCallback, EvalCallback)
