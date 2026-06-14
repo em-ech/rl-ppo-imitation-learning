@@ -110,7 +110,17 @@ expert gives cleaner full-length demos. Best architecture differs by environment
   as `*_generic_backup`. rl-zoo3 Walker2d PPO realistically tops out ~5000-6000,
   so 6000 is reachable but 8000 is unlikely with PPO.
 
+## Repo hygiene
+
+- **Dev tooling moved to `.claude/dev/` (gitignored).** Notebook generators, the
+  pilot smoke test, and the overnight orchestrator are not submission deliverables,
+  so they stay out of the repo. Run scripts (`train_expert.py`, `collect_demos.py`,
+  `bc_experiments.py`, `arch_sweep.py`), `src/`, notebooks, and the Colab runner
+  remain because they are part of reproduction. `DECISIONS.md` and `PLAN.md` kept at
+  root as project docs.
+
 ## Still to do
 
 DAgger (M7), Stage 5 pretraining comparison, M6 side-by-side video, notebook +
-presentation assembly. Both environments.
+presentation assembly. Both environments. Re-collect Walker2d demos and re-run
+Walker2d BC once the tuned expert finishes (new expert uses VecNormalize).
