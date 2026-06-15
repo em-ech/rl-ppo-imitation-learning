@@ -25,8 +25,9 @@ from src import config, eval, plotting, seeding
 torch.set_num_threads(1)
 ENV_ID = sys.argv[1] if len(sys.argv) > 1 else "Walker2d-v4"
 DATA_KEY = sys.argv[2] if len(sys.argv) > 2 else ENV_ID
-N_ITERS = int(sys.argv[3]) if len(sys.argv) > 3 else 10
+N_ITERS = int(sys.argv[3]) if len(sys.argv) > 3 else 12
 STEPS_PER_ITER = int(sys.argv[4]) if len(sys.argv) > 4 else 5000
+BC_EPOCHS_PER_ITER = int(sys.argv[5]) if len(sys.argv) > 5 else 25
 seeding.set_seed(0)
 rng = np.random.default_rng(0)
 t0 = time.time()
@@ -62,7 +63,8 @@ with tempfile.TemporaryDirectory(prefix="dagger_") as tmp:
         rng=rng, bc_trainer=bc_trainer)
     for i in range(N_ITERS):
         trainer.train(total_timesteps=STEPS_PER_ITER,
-                      bc_train_kwargs={"n_epochs": 4, "progress_bar": False})
+                      bc_train_kwargs={"n_epochs": BC_EPOCHS_PER_ITER,
+                                       "progress_bar": False})
         m, _ = eval.evaluate(trainer.policy, ENV_ID, n_episodes=10,
                              vecnorm_path=VN_PATH if VN_PATH.exists() else None)
         returns_by_iter.append(float(m))
