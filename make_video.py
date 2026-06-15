@@ -7,8 +7,6 @@ MuJoCo offscreen rendering can fail headless.
 Usage: make_video.py [ENV_ID] [DATA_KEY]
 """
 import sys
-from pathlib import Path
-
 import gymnasium as gym
 import numpy as np
 from stable_baselines3 import PPO

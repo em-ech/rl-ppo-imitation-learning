@@ -21,6 +21,7 @@ from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.vec_env import VecNormalize
 
 from src import config, envs, plotting, seeding
+from src.ppo import PROFILES
 
 torch.set_num_threads(1)
 ENV_ID = sys.argv[1] if len(sys.argv) > 1 else "Walker2d-v4"
@@ -36,22 +37,6 @@ VN_PATH = MODEL_DIR / "vecnormalize.pkl"
 NORM = VN_PATH.exists()
 print(f"[pretrain] env={ENV_ID} data_key={DATA_KEY} profile={PROFILE} "
       f"steps={TIMESTEPS:,} n_envs={N_ENVS} normalized={NORM}", flush=True)
-
-
-def linear_schedule(initial):
-    return lambda progress_remaining: progress_remaining * initial
-
-
-PROFILES = {
-    "default": dict(n_steps=2048, batch_size=64, n_epochs=10,
-                    learning_rate=linear_schedule(3e-4), clip_range=0.2,
-                    gamma=0.99, gae_lambda=0.95, ent_coef=0.0, vf_coef=0.5,
-                    max_grad_norm=0.5),
-    "tuned_ant": dict(n_steps=512, batch_size=32, n_epochs=10,
-                      learning_rate=1.90609e-05, clip_range=0.1, gamma=0.98,
-                      gae_lambda=0.8, ent_coef=4.9646e-07, vf_coef=0.677239,
-                      max_grad_norm=0.6),
-}
 
 
 def make_train_env(load_expert_stats):
