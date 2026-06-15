@@ -141,15 +141,16 @@ expert gives cleaner full-length demos. Best architecture differs by environment
 Main library/scratch BC are at 50 epochs; the epoch sweep shows 50 undertrains the
 aggressive normalised experts.
 
-| Metric | Walker2d-6043 | Walker2d-4627 | Ant-6293 |
-|---|---|---|---|
-| Library BC (50ep) | 2695 | 4281 (91%) | 5540 (88%) |
-| Scratch BC (50ep) | 2446 | 3249 | 6137 (99%, MSE 5e-4) |
-| Epoch sweep peak | 4864 @100ep (80%) | 4640 @50ep | 6617 @50ep |
-| Ablation 100 eps | 2275 | 2216 | 5848 |
-| Arch winner (5 seeds) | large 3159 | large 4055 | skip 6148 (all ~5700-6150) |
+| Metric                | Walker2d-6043     | Walker2d-4627 | Ant-6293                   |
+| --------------------- | ----------------- | ------------- | -------------------------- |
+| Library BC (50ep)     | 2695              | 4281 (91%)    | 5540 (88%)                 |
+| Scratch BC (50ep)     | 2446              | 3249          | 6137 (99%, MSE 5e-4)       |
+| Epoch sweep peak      | 4864 @100ep (80%) | 4640 @50ep    | 6617 @50ep                 |
+| Ablation 100 eps      | 2275              | 2216          | 5848                       |
+| Arch winner (5 seeds) | large 3159        | large 4055    | skip 6148 (all ~5700-6150) |
 
 Key findings:
+
 - **Epoch budget is expert-specific (M3).** Ant converges by ~5 epochs; Walker2d-4627
   by ~50; the aggressive Walker2d-6043 keeps improving to 100 (2747 -> 4864). The
   earlier "47% gap" was mostly undertraining, not an imitability ceiling.
@@ -161,10 +162,35 @@ Key findings:
 - **Architecture (RQ4) is env-dependent**: capacity matters on Walker2d (large wins);
   on Ant all architectures cluster tightly (5707-6148), skip marginally best.
 
-Open refinement: for the headline BC numbers, cite the epoch-sweep-informed value
-for Walker2d-6043 (~4864 at 100 epochs), or bump the default BC epochs.
+## Early stopping fixed the undertraining (final BC numbers)
+
+Added validation-loss early stopping (spec-recommended) with a 150-epoch ceiling
+for scratch BC, and a 100-epoch budget for library BC (which cannot early-stop).
+This resolved the Walker2d-6043 undertraining cleanly.
+
+| Metric | Walker2d-6043 | Walker2d-4627 | Ant-6293 |
+|---|---|---|---|
+| Library BC | 5719 (95%) | 4591 | 6237 (99%) |
+| Scratch BC | 4238 (val MSE .013) | 4160 (.003) | 5754 (5e-4) |
+| Arch winner (5 seeds) | large 4982 | tight ~4500 (skip) | ~5900 (default/large) |
+
+## Overnight pipeline (DAgger + pretraining + video) all completed
+
+- **Stage 5 pretraining (central result):** imitation pretraining dramatically cuts
+  PPO sample complexity. At 1.5M steps: Walker2d scratch 1126 vs BC+PPO 5678 vs
+  DAgger+PPO 5755; Ant scratch 4965 vs BC+PPO 6603 vs DAgger+PPO 6881. Nuance: with
+  Ant's tiny LR the warm-start holds from step 0 (no forgetting); with Walker2d's
+  larger LR the warm-started actor dips early (random critic) then recovers fast.
+- **DAgger (M7):** first run undertrained (4 BC epochs/iter): Walker2d-6043 best 2402,
+  Walker2d-4627 4575, Ant 6604 (Ant already beats BC). Re-running with 12 iters x 25
+  BC epochs for a fair comparison (in progress).
+- **M6 videos:** side-by-side expert vs BC-student rendered for both envs
+  (videos/expert_vs_student_*.mp4, 1000 frames each).
+- Orchestrated via .claude/dev/overnight_all.sh with failure isolation; all stages
+  reported ok.
 
 ## Still to do
 
-DAgger (M7), Stage 5 pretraining comparison, M6 side-by-side video, notebook +
-presentation assembly. Both environments. (Paused here for review, per request.)
+Fair-DAgger re-run finishing; then notebook assembly (M-deliverables into the 4
+notebooks), presentation, and optionally bonuses E1/E2. PPO-from-scratch in the
+pretraining plot could optionally warm the critic to avoid the early dip.
