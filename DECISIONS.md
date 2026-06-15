@@ -168,11 +168,11 @@ Added validation-loss early stopping (spec-recommended) with a 150-epoch ceiling
 for scratch BC, and a 100-epoch budget for library BC (which cannot early-stop).
 This resolved the Walker2d-6043 undertraining cleanly.
 
-| Metric | Walker2d-6043 | Walker2d-4627 | Ant-6293 |
-|---|---|---|---|
-| Library BC | 5719 (95%) | 4591 | 6237 (99%) |
-| Scratch BC | 4238 (val MSE .013) | 4160 (.003) | 5754 (5e-4) |
-| Arch winner (5 seeds) | large 4982 | tight ~4500 (skip) | ~5900 (default/large) |
+| Metric                | Walker2d-6043       | Walker2d-4627      | Ant-6293              |
+| --------------------- | ------------------- | ------------------ | --------------------- |
+| Library BC            | 5719 (95%)          | 4591               | 6237 (99%)            |
+| Scratch BC            | 4238 (val MSE .013) | 4160 (.003)        | 5754 (5e-4)           |
+| Arch winner (5 seeds) | large 4982          | tight ~4500 (skip) | ~5900 (default/large) |
 
 ## Overnight pipeline (DAgger + pretraining + video) all completed
 
@@ -188,7 +188,7 @@ This resolved the Walker2d-6043 undertraining cleanly.
   correcting covariate shift); Ant starts already high. Clean RQ5 result: DAgger
   reaches expert level and edges out BC.
 - **M6 videos:** side-by-side expert vs BC-student rendered for both envs
-  (videos/expert_vs_student_*.mp4, 1000 frames each).
+  (videos/expert*vs_student*\*.mp4, 1000 frames each).
 - Orchestrated via .claude/dev/overnight_all.sh with failure isolation; all stages
   reported ok.
 

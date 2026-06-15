@@ -15,3 +15,10 @@ tensorboard==2.18.0
 matplotlib==3.9.2
 numpy==1.26.4
 moviepy==1.0.3
+imageio-ffmpeg==0.6.0          # ffmpeg backend for the M6 videos
+
+# Running the notebooks (tables + execution)
+pandas==3.0.3
+notebook==7.5.7
+nbconvert==7.17.1
+ipykernel==7.3.0

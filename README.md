@@ -1,66 +1,138 @@
 # RL Group Project: PPO + Imitation Learning (Walker2d / Ant)
 
-Two-phase pipeline: train a PPO expert, then imitate it with Behavioural Cloning
-and DAgger, and finally test imitation as PPO pretraining. Full plan in
-[PLAN.md](PLAN.md).
+**Group members:** Marco De Palma, Em Echeverria, Leah Sarouphin,
+Juan Jose Rincon Briceño, Matteo Mainetti
 
-## Setup
+A complete two-phase reinforcement learning pipeline in MuJoCo: train a PPO
+expert, distill it with Behavioural Cloning and DAgger, and test imitation as a
+PPO-pretraining warm start. Run on both `Walker2d-v4` and `Ant-v4`.
 
-Requires Python 3.11 (torch / SB3 / imitation lack reliable 3.13+ wheels).
+The narrative of decisions and why things changed is in [DECISIONS.md](DECISIONS.md);
+the original plan is in [PLAN.md](PLAN.md).
+
+## Headline results
+
+|                              | Walker2d   | Ant        |
+| ---------------------------- | ---------- | ---------- |
+| PPO expert (eval return)     | ~6043      | ~6293      |
+| Library BC (% of expert)     | 5719 (95%) | 6237 (99%) |
+| DAgger (fair, 12 iters)      | 6208       | 6564       |
+| PPO from scratch @1.5M steps | ~1126      | ~4965      |
+| BC/DAgger + PPO @1.5M steps  | ~5700      | ~6600-6900 |
+
+**Central finding:** imitation pretraining sharply reduces PPO's sample
+complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
+the from-scratch budget. Full discussion (RQ1-RQ6) is in the notebooks.
+
+## Repository layout
+
+```
+notebooks/   01..05  submission notebooks (executed, figures embedded)
+src/         shared modules: config, seeding, envs, collect, bc_scratch,
+             bc_bridge, dagger, eval, plotting
+train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
+dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
+colab/colab_runner.ipynb   one-click Colab pipeline
+requirements.txt   DECISIONS.md   PLAN.md
+models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
+```
+
+## Environment setup (from scratch)
+
+Requires **Python 3.11** (torch / SB3 / imitation lack reliable 3.13+ wheels).
+Using [uv](https://docs.astral.sh/uv/) (or swap for `python -m venv`):
 
 ```bash
 uv venv --python 3.11 .venv
-uv pip install -r requirements.txt
+uv pip install -r requirements.txt        # or: .venv/bin/pip install -r requirements.txt
 ```
 
 Sanity check:
 
 ```bash
-.venv/bin/python -c "import gymnasium as gym; gym.make('Walker2d-v4').reset(seed=42); print('ok')"
+.venv/bin/python -c "import gymnasium as gym; gym.make('Walker2d-v4').reset(seed=0); print('ok')"
 ```
 
-## Layout
+MuJoCo is bundled with `gymnasium[mujoco]`; no licence needed.
 
-| Path                                   | Purpose                                                                                               |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `src/`                                 | shared code: env factory, seeding, eval, plotting, collection, BC (scratch + library), BC->PPO bridge |
-| `notebooks/01_ppo_expert.ipynb`        | PPO expert training (M1)                                                                              |
-| `notebooks/02_data_collection.ipynb`   | demonstration dataset + EDA (M2)                                                                      |
-| `notebooks/03_bc_student.ipynb`        | BC library vs scratch, ablation, architecture sweep (M3/M4/M5/M8)                                     |
-| `notebooks/04_dagger.ipynb`            | DAgger, BC vs DAgger comparison (M7)                                                                  |
-| `notebooks/05_pretraining.ipynb`       | imitation as PPO pretraining (Stage 5)                                                                |
-| `models/ data/ outputs/ videos/ logs/` | artifacts (git-ignored)                                                                               |
+## Reproduce from scratch
 
-## Reproducing
+Run in order. Runtimes are on an Apple Silicon laptop CPU (Colab CPU is slower;
+PPO is CPU-bound so a GPU does not speed up expert training). All randomness is
+seeded (`src.seeding.set_seed` plus explicit `seed=` to SB3 and `env.reset(seed=)`).
 
-Run the notebooks in order 01 to 05. Each sets `ENV_ID` near the top; run once
-with `Walker2d-v4` and once with `Ant-v4`. All randomness is seeded via
-`src.seeding.set_seed`. Expert training is CPU-bound (MuJoCo sim); from-scratch
-BC uses MPS/CUDA if available.
+```bash
+# 1. PPO experts (M1)            Walker2d ~30-40 min | Ant ~90 min
+python train_expert.py Walker2d-v4 8000000 4 norm default
+python train_expert.py Ant-v4     10000000 1 norm tuned_ant
+
+# 2. Demonstrations + EDA (M2)   ~1-2 min each
+python collect_demos.py Walker2d-v4 100
+python collect_demos.py Ant-v4     100
+
+# 3. BC: library+scratch, epoch sweep, ablation (5x5 seeds), arch sweep
+#    (M3/M4/M5/M8)               ~40 min per config
+python bc_experiments.py Walker2d-v4
+python arch_sweep.py     Walker2d-v4
+python bc_experiments.py Ant-v4
+python arch_sweep.py     Ant-v4
+
+# 4. DAgger (M7)                 ~6-10 min each
+python dagger_run.py Walker2d-v4 Walker2d-v4
+python dagger_run.py Ant-v4      Ant-v4
+
+# 5. Imitation-as-PPO pretraining (Stage 5)   ~20-40 min per env
+python pretraining.py Walker2d-v4 Walker2d-v4 default   1500000 4
+python pretraining.py Ant-v4      Ant-v4      tuned_ant 1500000 1
+
+# 6. Side-by-side videos (M6)    ~1 min each
+python make_video.py Walker2d-v4 Walker2d-v4
+python make_video.py Ant-v4      Ant-v4
+```
+
+`train_expert.py` writes `models/ppo_expert_<env>/best_model` (+ `vecnormalize.pkl`)
+and checkpoints; it resumes from the last checkpoint if re-run with `resume`
+appended. Every stage writes its figures/JSON to `outputs/`.
+
+To also study the second (non-normalised) Walker2d expert used in the report's
+both-experts comparison, pass `Walker2d-v4_generic_backup` as the `DATA_KEY`
+(second argument) to `bc_experiments.py` / `arch_sweep.py` / `dagger_run.py`.
+
+## Notebooks (the submission)
+
+The five notebooks run **top-to-bottom with no manual intervention** and are
+crash-guarded (missing artifacts print a hint rather than erroring). They set all
+seeds, load the submitted expert checkpoints, and:
+
+- **re-run the light stages live** (expert evaluation, demonstration collection,
+  BC training, a short DAgger) so the results are genuinely reproduced in minutes;
+- **display precomputed figures** for the heavy multi-seed sweeps and the PPO
+  pretraining (produced by the scripts above), which take too long to re-run inline.
+
+| Notebook           | Deliverables   | Research questions         |
+| ------------------ | -------------- | -------------------------- |
+| 01_ppo_expert      | M1             | hyperparameter rationale   |
+| 02_data_collection | M2             | dataset quality, EDA       |
+| 03_bc_student      | M3, M4, M5, M8 | RQ1-RQ4                    |
+| 04_dagger          | M7             | RQ5                        |
+| 05_pretraining     | Stage 5        | RQ6 + consolidated RQ1-RQ6 |
+
+Launch with `.venv/bin/jupyter notebook` (or open in VS Code / Colab).
 
 ## Running on Colab
 
-Use [colab/colab_runner.ipynb](colab/colab_runner.ipynb), which clones this repo,
-installs deps, and runs every stage with artifacts persisted to Drive so
-disconnects do not lose work.
+Open [colab/colab_runner.ipynb](colab/colab_runner.ipynb) in Colab (File ->
+Open notebook -> GitHub -> `em-ech/rl-ppo-imitation-learning`). It clones the
+repo, installs deps, and runs each stage with artifacts persisted to Drive. Note:
+on Colab the numpy 1.26 pin requires a one-time runtime restart after install
+(the notebook says when), and the dependency-conflict warnings about
+jax/transformers/opencv are harmless (those packages are unused here).
 
-1. Open `colab/colab_runner.ipynb` in Colab (open from GitHub via
-   File -> Open notebook -> GitHub, or upload the single file).
-2. Run the cells top to bottom. Cell 1 clones the code; cell 2 mounts Drive.
+## Reproducibility notes
 
-PPO training is CPU-bound (the MuJoCo sim is not GPU-accelerated), so a GPU
-runtime only speeds up from-scratch BC. Long expert runs need Colab Pro or an
-active tab to avoid idle disconnects; checkpoints and Drive persistence allow
-recovery either way. The data root is set via `PROJECT_DATA_ROOT`:
-
-```python
-from google.colab import drive; drive.mount('/content/drive')
-import os; os.environ['PROJECT_DATA_ROOT'] = '/content/drive/MyDrive/rl_project'
-```
-
-## Notes on the spec
-
-- Ant-v4 observation space is 27-dim in gymnasium 0.29 (the spec's 111 is the
-  contact-force variant). We use the 27-dim default.
-- The provided DAgger listing (Section 6.3) and the Stage 5 fine-tuning step are
-  reimplemented here; see [PLAN.md](PLAN.md) section 2 for the full list of fixes.
+- Seeds: `numpy`, `torch`, Python `random` (via `src.seeding.set_seed`), the
+  environments (`reset(seed=)`), and SB3 (`seed=`) are all set.
+- The experts use `VecNormalize`; BC/DAgger train and evaluate on the same
+  normalised observations (handled in `src.eval`).
+- Notebooks are crash-guarded: a fresh run without precomputed artifacts prints
+  guidance instead of failing.
