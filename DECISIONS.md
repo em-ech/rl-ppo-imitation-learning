@@ -181,9 +181,12 @@ This resolved the Walker2d-6043 undertraining cleanly.
   DAgger+PPO 5755; Ant scratch 4965 vs BC+PPO 6603 vs DAgger+PPO 6881. Nuance: with
   Ant's tiny LR the warm-start holds from step 0 (no forgetting); with Walker2d's
   larger LR the warm-started actor dips early (random critic) then recovers fast.
-- **DAgger (M7):** first run undertrained (4 BC epochs/iter): Walker2d-6043 best 2402,
-  Walker2d-4627 4575, Ant 6604 (Ant already beats BC). Re-running with 12 iters x 25
-  BC epochs for a fair comparison (in progress).
+- **DAgger (M7):** first run undertrained (4 BC epochs/iter, Walker2d-6043 best 2402).
+  Fair re-run (12 iters x 25 BC epochs) matches/beats BC everywhere: Walker2d-6043
+  6208 (>BC 5719, ~expert), Walker2d-4627 4732 (>BC 4591), Ant 6564 (>BC 6237).
+  Walker2d-6043 curve climbs 601 -> 6208 over iterations (on-policy aggregation
+  correcting covariate shift); Ant starts already high. Clean RQ5 result: DAgger
+  reaches expert level and edges out BC.
 - **M6 videos:** side-by-side expert vs BC-student rendered for both envs
   (videos/expert_vs_student_*.mp4, 1000 frames each).
 - Orchestrated via .claude/dev/overnight_all.sh with failure isolation; all stages
@@ -191,6 +194,7 @@ This resolved the Walker2d-6043 undertraining cleanly.
 
 ## Still to do
 
-Fair-DAgger re-run finishing; then notebook assembly (M-deliverables into the 4
-notebooks), presentation, and optionally bonuses E1/E2. PPO-from-scratch in the
-pretraining plot could optionally warm the critic to avoid the early dip.
+All experiments (M1-M8 + Stage 5 + M6 video) are complete with results. Remaining:
+notebook assembly (wire the M-deliverable results/plots into the 4 submission
+notebooks), the presentation, and optionally bonuses E1/E2. Minor refinement: the
+pretraining plot's BC+PPO dip on Walker2d could be removed by warming the critic.
