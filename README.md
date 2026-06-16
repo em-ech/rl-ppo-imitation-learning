@@ -7,8 +7,9 @@ A complete two-phase reinforcement learning pipeline in MuJoCo: train a PPO
 expert, distill it with Behavioural Cloning and DAgger, and test imitation as a
 PPO-pretraining warm start. Run on both `Walker2d-v4` and `Ant-v4`.
 
-The narrative of decisions and why things changed is in [DECISIONS.md](DECISIONS.md);
-the original plan is in [PLAN.md](PLAN.md).
+The plan, the decisions and why they changed, the final results, and the
+answers to the research questions (RQ1-RQ6) are in
+[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
 
 ## Headline results
 
@@ -22,7 +23,8 @@ the original plan is in [PLAN.md](PLAN.md).
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
 complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
-the from-scratch budget. Full discussion (RQ1-RQ6) is in the notebooks.
+the from-scratch budget. Full discussion (RQ1-RQ6) is in
+[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
 
 ## Repository layout
 
@@ -33,7 +35,7 @@ src/         shared modules: config, seeding, envs, collect, bc_scratch,
 train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
 dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
 colab/colab_runner.ipynb   one-click Colab pipeline
-requirements.txt   DECISIONS.md   PLAN.md
+requirements.txt   PROJECT_OVERVIEW.md
 models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
 ```
 
