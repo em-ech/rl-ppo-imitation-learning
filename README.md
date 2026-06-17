@@ -11,41 +11,31 @@ The plan, the decisions and why they changed, the final results, and the
 answers to the research questions (RQ1-RQ6) are in
 [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
 
-## Headline results
+## Comparison of all experiments
 
-|                              | Walker2d   | Ant        |
-| ---------------------------- | ---------- | ---------- |
-| PPO expert (eval return)     | ~6043      | ~6293      |
-| Library BC (% of expert)     | 5719 (95%) | 6237 (99%) |
-| DAgger (fair, 12 iters)      | 6208       | 6564       |
-| PPO from scratch @1.5M steps | ~1126      | ~4965      |
-| BC/DAgger + PPO @1.5M steps  | ~5700      | ~6600-6900 |
+Each row changes one thing from the pipeline; the "What it isolates" column says
+what. The first five are the core stages (M1-M7); the last two are the bonus BC
+ablations (E1, E2; 5 seeds per point, `noise_sweep.py` / `norm_ablation.py`,
+figures in [notebook 06](notebooks/06_extended.ipynb)).
+
+| Experiment                    | What it isolates                                           | Walker2d            | Ant                  |
+| ----------------------------- | ---------------------------------------------------------- | ------------------- | -------------------- |
+| PPO expert                    | RL trained from scratch; the oracle every student targets  | 6043                | 6293                 |
+| Library BC                    | pure supervised imitation of the expert (`imitation` lib)  | 5719 (95%)          | 6237 (99%)           |
+| DAgger                        | BC plus on-policy expert queries to fight covariate shift  | 6208                | 6564                 |
+| PPO from scratch @1.5M        | RL with no warm start; the sample-efficiency baseline      | ~1126               | ~4965                |
+| BC / DAgger + PPO @1.5M       | same 1.5M-step budget, but warm-started from imitation     | ~5700               | ~6600-6900           |
+| E1: noisy expert (bonus)      | BC robustness as Gaussian action-label noise rises         | collapses by sigma=0.05 | robust through sigma=0.4 |
+| E2: obs normalisation (bonus) | BC with vs without zero-mean / unit-variance observations  | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x)   |
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
 complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
-the from-scratch budget. Full discussion (RQ1-RQ6) is in
-[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
-
-## Extended requirements (E1, E2; bonus)
-
-Two from-scratch BC ablations, 5 seeds on both environments (`noise_sweep.py`,
-`norm_ablation.py`; figures in [notebook 06](notebooks/06_extended.ipynb)):
-
-| Bonus                           | Walker2d            | Ant                   |
-| ------------------------------- | ------------------- | --------------------- |
-| E1 collapse (below half-expert) | sigma >= 0.05       | none up to sigma=0.8  |
-| E2 normalised vs raw obs        | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x)    |
-
-- **E1, noisy expert:** Walker2d is fragile (BC below half the expert by
-  sigma=0.05, down to 5% at sigma=0.8); Ant is robust (95-102% of the expert
-  through sigma=0.4).
-- **E2, observation normalisation:** decisive on Walker2d (a 4.0x gap, raw-obs BC
-  fails) but irrelevant on Ant.
-
-Both reinforce RQ6: imitation difficulty, not state dimensionality, governs
-sensitivity. A further bonus (off-policy SAC vs on-policy PPO) is set up in
-`train_sac.py` and the Colab runner. Full numbers in
-[PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+the from-scratch budget. The two bonus rows reinforce RQ6: Walker2d is fragile to
+imperfect imitation (collapses under small action noise, fails without obs
+normalisation) while Ant is robust to both, so imitation difficulty, not state
+dimensionality, governs sensitivity. A further bonus (off-policy SAC vs on-policy
+PPO) is set up in `train_sac.py` and the Colab runner. Full discussion (RQ1-RQ6)
+and exact E1/E2 numbers are in [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
 
 ## Repository layout
 
