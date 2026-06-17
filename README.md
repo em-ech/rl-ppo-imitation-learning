@@ -45,7 +45,7 @@ src/         shared modules: config, seeding, envs, collect, bc_scratch,
 train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
 dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
 noise_sweep.py   norm_ablation.py                       extended requirements (E1, E2)
-colab/colab_runner.ipynb   SAC training on a Colab GPU (bonus)
+colab/colab_runner.ipynb   full documented pipeline + extended + SAC (Colab)
 requirements.txt   PROJECT_OVERVIEW.md
 models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
 ```
@@ -145,17 +145,18 @@ seeds, load the submitted expert checkpoints, and:
 
 Launch with `.venv/bin/jupyter notebook` (or open in VS Code / Colab).
 
-## Running on Colab (SAC bonus)
+## Running on Colab
 
-[colab/colab_runner.ipynb](colab/colab_runner.ipynb) trains the bonus SAC experts
-on a Colab **GPU** (SAC is update-bound, so a GPU helps; PPO is CPU-bound and is
-not run here). Open it in Colab (File -> Open notebook -> GitHub ->
-`em-ech/rl-ppo-imitation-learning`, branch `extended-e1-e2-and-sac-bonus`), set a
-GPU runtime, and run top to bottom. It clones the code, installs only
-stable-baselines3 + gymnasium[mujoco] (no numpy downgrade or restart), mounts
-Drive, and trains SAC on Ant-v4 and HalfCheetah-v4 with checkpoints persisted to
-Drive (resumable after a disconnect). The main PPO/BC/DAgger pipeline is
-reproduced from the run scripts above, not on Colab.
+[colab/colab_runner.ipynb](colab/colab_runner.ipynb) runs the whole project on
+Colab, with a markdown description and the hyperparameter rationale for every
+section: PPO experts, demonstrations, BC, DAgger, pretraining, the extended
+studies (E1, E2), and the SAC bonus. Open it from GitHub on the
+`extended-e1-e2-and-sac-bonus` branch (until it is merged to main), set a **GPU**
+runtime (helps from-scratch BC and SAC; PPO is CPU-bound and unaffected), and run
+top to bottom. Section 1 installs `requirements.txt` and asks for a one-time
+runtime restart (the numpy 1.26 pin that `imitation` forces); after restarting,
+re-run cells 1.1 and 1.3 and continue. All artifacts persist to Drive via
+`PROJECT_DATA_ROOT`, and every long stage resumes from its last checkpoint.
 
 ## Reproducibility notes
 
