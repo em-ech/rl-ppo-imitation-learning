@@ -17,15 +17,15 @@ The first five rows are the core stages (M1-M7); the last two are the bonus BC
 ablations (E1, E2; 5 seeds per point, `noise_sweep.py` / `norm_ablation.py`,
 figures in [notebook 06](notebooks/06_extended.ipynb)).
 
-| Experiment                    | Description                                                | Walker2d            | Ant                  |
-| ----------------------------- | ---------------------------------------------------------- | ------------------- | -------------------- |
-| PPO expert                    | the RL expert trained from scratch (oracle for students)   | 6043                | 6293                 |
-| Library BC                    | behavioural cloning of the expert with the `imitation` lib | 5719 (95%)          | 6237 (99%)           |
-| DAgger                        | behavioural cloning with on-policy expert querying         | 6208                | 6564                 |
-| PPO from scratch @1.5M        | PPO trained from a random start, no imitation              | ~1126               | ~4965                |
-| BC / DAgger + PPO @1.5M       | PPO warm-started from the imitation policy                 | ~5700               | ~6600-6900           |
+| Experiment                    | Description                                                | Walker2d                | Ant                      |
+| ----------------------------- | ---------------------------------------------------------- | ----------------------- | ------------------------ |
+| PPO expert                    | the RL expert trained from scratch (oracle for students)   | 6043                    | 6293                     |
+| Library BC                    | behavioural cloning of the expert with the `imitation` lib | 5719 (95%)              | 6237 (99%)               |
+| DAgger                        | behavioural cloning with on-policy expert querying         | 6208                    | 6564                     |
+| PPO from scratch @1.5M        | PPO trained from a random start, no imitation              | ~1126                   | ~4965                    |
+| BC / DAgger + PPO @1.5M       | PPO warm-started from the imitation policy                 | ~5700                   | ~6600-6900               |
 | E1: noisy expert (bonus)      | BC trained on expert actions with added Gaussian noise     | collapses by sigma=0.05 | robust through sigma=0.4 |
-| E2: obs normalisation (bonus) | BC with vs without zero-mean / unit-variance observations  | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x)   |
+| E2: obs normalisation (bonus) | BC with vs without zero-mean / unit-variance observations  | 4654 vs 1163 (4.0x)     | 5679 vs 5946 (~1x)       |
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
 complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
@@ -45,7 +45,7 @@ src/         shared modules: config, seeding, envs, collect, bc_scratch,
 train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
 dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
 noise_sweep.py   norm_ablation.py                       extended requirements (E1, E2)
-colab/colab_runner.ipynb   one-click Colab pipeline
+colab/colab_runner.ipynb   SAC training on a Colab GPU (bonus)
 requirements.txt   PROJECT_OVERVIEW.md
 models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
 ```
@@ -145,14 +145,17 @@ seeds, load the submitted expert checkpoints, and:
 
 Launch with `.venv/bin/jupyter notebook` (or open in VS Code / Colab).
 
-## Running on Colab
+## Running on Colab (SAC bonus)
 
-Open [colab/colab_runner.ipynb](colab/colab_runner.ipynb) in Colab (File ->
-Open notebook -> GitHub -> `em-ech/rl-ppo-imitation-learning`). It clones the
-repo, installs deps, and runs each stage with artifacts persisted to Drive. Note:
-on Colab the numpy 1.26 pin requires a one-time runtime restart after install
-(the notebook says when), and the dependency-conflict warnings about
-jax/transformers/opencv are harmless (those packages are unused here).
+[colab/colab_runner.ipynb](colab/colab_runner.ipynb) trains the bonus SAC experts
+on a Colab **GPU** (SAC is update-bound, so a GPU helps; PPO is CPU-bound and is
+not run here). Open it in Colab (File -> Open notebook -> GitHub ->
+`em-ech/rl-ppo-imitation-learning`, branch `extended-e1-e2-and-sac-bonus`), set a
+GPU runtime, and run top to bottom. It clones the code, installs only
+stable-baselines3 + gymnasium[mujoco] (no numpy downgrade or restart), mounts
+Drive, and trains SAC on Ant-v4 and HalfCheetah-v4 with checkpoints persisted to
+Drive (resumable after a disconnect). The main PPO/BC/DAgger pipeline is
+reproduced from the run scripts above, not on Colab.
 
 ## Reproducibility notes
 
