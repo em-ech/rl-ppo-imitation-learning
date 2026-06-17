@@ -13,19 +13,18 @@ answers to the research questions (RQ1-RQ6) are in
 
 ## Comparison of all experiments
 
-Each row changes one thing from the pipeline; the "What it isolates" column says
-what. The first five are the core stages (M1-M7); the last two are the bonus BC
+The first five rows are the core stages (M1-M7); the last two are the bonus BC
 ablations (E1, E2; 5 seeds per point, `noise_sweep.py` / `norm_ablation.py`,
 figures in [notebook 06](notebooks/06_extended.ipynb)).
 
-| Experiment                    | What it isolates                                           | Walker2d            | Ant                  |
+| Experiment                    | Description                                                | Walker2d            | Ant                  |
 | ----------------------------- | ---------------------------------------------------------- | ------------------- | -------------------- |
-| PPO expert                    | RL trained from scratch; the oracle every student targets  | 6043                | 6293                 |
-| Library BC                    | pure supervised imitation of the expert (`imitation` lib)  | 5719 (95%)          | 6237 (99%)           |
-| DAgger                        | BC plus on-policy expert queries to fight covariate shift  | 6208                | 6564                 |
-| PPO from scratch @1.5M        | RL with no warm start; the sample-efficiency baseline      | ~1126               | ~4965                |
-| BC / DAgger + PPO @1.5M       | same 1.5M-step budget, but warm-started from imitation     | ~5700               | ~6600-6900           |
-| E1: noisy expert (bonus)      | BC robustness as Gaussian action-label noise rises         | collapses by sigma=0.05 | robust through sigma=0.4 |
+| PPO expert                    | the RL expert trained from scratch (oracle for students)   | 6043                | 6293                 |
+| Library BC                    | behavioural cloning of the expert with the `imitation` lib | 5719 (95%)          | 6237 (99%)           |
+| DAgger                        | behavioural cloning with on-policy expert querying         | 6208                | 6564                 |
+| PPO from scratch @1.5M        | PPO trained from a random start, no imitation              | ~1126               | ~4965                |
+| BC / DAgger + PPO @1.5M       | PPO warm-started from the imitation policy                 | ~5700               | ~6600-6900           |
+| E1: noisy expert (bonus)      | BC trained on expert actions with added Gaussian noise     | collapses by sigma=0.05 | robust through sigma=0.4 |
 | E2: obs normalisation (bonus) | BC with vs without zero-mean / unit-variance observations  | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x)   |
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
