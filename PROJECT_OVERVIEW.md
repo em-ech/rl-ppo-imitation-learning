@@ -143,6 +143,32 @@ Stage 5 pretraining, eval return at 1.5M env steps:
 | Walker2d | 1145        | 5690     | 5451         |
 | Ant      | 4965        | 6603     | 6881         |
 
+### Extended requirements (E1, E2; bonus)
+
+Two BC ablations on the from-scratch student, 5 seeds each, both environments
+(`noise_sweep.py`, `norm_ablation.py`; figures in notebook 06).
+
+**E1 - noisy expert** (Gaussian noise added to recorded actions). The
+environments behave oppositely. Walker2d is highly sensitive: the student is
+already below half the expert return at sigma=0.05 (46%) and decays monotonically
+to 5% at sigma=0.8, so its collapse point is ~0.05. Ant is robust: it holds at
+95-102% of the expert through sigma=0.4 and only bends to 71% at sigma=0.8, never
+collapsing in the tested range.
+
+**E2 - observation normalisation** (zero mean / unit variance vs raw). Also
+environment-dependent. On Walker2d normalisation is decisive: 4654 (77%) vs 1163
+(19%) raw, a 4.0x gap, raw-observation BC effectively fails. On Ant it makes no
+difference: 5679 (92%) vs 5946 (96%), within seed noise.
+
+**Theme.** Both reinforce RQ6: Walker2d is fragile to imperfect imitation (needs
+clean labels and normalised inputs) while Ant is robust to both, so imitation
+difficulty, not state dimensionality, governs sensitivity.
+
+| Bonus | Walker2d | Ant |
+| ----- | -------- | --- |
+| E1 collapse (below half-expert) | sigma >= 0.05 | none up to sigma=0.8 |
+| E2 normalised vs raw | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x) |
+
 ## 4. Research questions (evidence-backed answers)
 
 **Central question - can imitation reduce PPO's sample complexity?** Yes, decisively.

@@ -29,11 +29,12 @@ the from-scratch budget. Full discussion (RQ1-RQ6) is in
 ## Repository layout
 
 ```
-notebooks/   01..05  submission notebooks (executed, figures embedded)
+notebooks/   01..06  submission notebooks (executed, figures embedded)
 src/         shared modules: config, seeding, envs, collect, bc_scratch,
              bc_bridge, dagger, eval, plotting
 train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
 dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
+noise_sweep.py   norm_ablation.py                       extended requirements (E1, E2)
 colab/colab_runner.ipynb   one-click Colab pipeline
 requirements.txt   PROJECT_OVERVIEW.md
 models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
@@ -90,6 +91,18 @@ python pretraining.py Ant-v4      Ant-v4      tuned_ant 1500000 1
 # 6. Side-by-side videos (M6)    ~1 min each
 python make_video.py Walker2d-v4 Walker2d-v4
 python make_video.py Ant-v4      Ant-v4
+
+# 7. Extended requirements (E1 noisy expert, E2 obs normalisation)  ~15-30 min per env
+python noise_sweep.py   Walker2d-v4
+python norm_ablation.py Walker2d-v4
+python noise_sweep.py   Ant-v4
+python norm_ablation.py Ant-v4
+
+# 8. Bonus: SAC off-policy expert (vs on-policy PPO sample efficiency).
+#    SAC is update-bound, so a GPU helps; device="auto" picks CUDA when present.
+#    No VecNormalize (off-policy replay buffer). Resumable via the latest checkpoint.
+python train_sac.py Ant-v4        3000000 tuned_ant         # in-brief comparison
+python train_sac.py HalfCheetah-v4 3000000 tuned_halfcheetah # off-brief, targets 8000
 ```
 
 `train_expert.py` writes `models/ppo_expert_<env>/best_model` (+ `vecnormalize.pkl`)
@@ -102,7 +115,7 @@ both-experts comparison, pass `Walker2d-v4_generic_backup` as the `DATA_KEY`
 
 ## Notebooks (the submission)
 
-The five notebooks run **top-to-bottom with no manual intervention** and are
+The six notebooks run **top-to-bottom with no manual intervention** and are
 crash-guarded (missing artifacts print a hint rather than erroring). They set all
 seeds, load the submitted expert checkpoints, and:
 
@@ -118,6 +131,7 @@ seeds, load the submitted expert checkpoints, and:
 | 03_bc_student      | M3, M4, M5, M8 | RQ1-RQ4                    |
 | 04_dagger          | M7             | RQ5                        |
 | 05_pretraining     | Stage 5        | RQ6 + consolidated RQ1-RQ6 |
+| 06_extended        | E1, E2 (bonus) | noise robustness, obs norm |
 
 Launch with `.venv/bin/jupyter notebook` (or open in VS Code / Colab).
 
