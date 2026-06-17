@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import gymnasium as gym
 import numpy as np
 
 
@@ -26,6 +25,8 @@ def collect(model, env_id: str, n_episodes: int, out_dir: Path,
     observation is still what gets stored, so the BC student learns a
     raw-observation -> action mapping and needs no normalisation at deployment.
     """
+    import gymnasium as gym
+
     env = gym.make(env_id)
     all_obs, all_acts, returns, lengths = [], [], [], []
 
@@ -76,13 +77,41 @@ def load(data_dir: Path) -> dict:
              "episode_lengths", "episode_starts"]}
 
 
+def _subset_end(data: dict, n_episodes: int) -> int:
+    """Validate episode metadata and return the flat-array end index."""
+    if n_episodes < 1:
+        raise ValueError("n_episodes must be positive")
+
+    starts = np.asarray(data["episode_starts"])
+    lengths = np.asarray(data["episode_lengths"])
+    total_episodes = len(lengths)
+    if total_episodes == 0:
+        raise ValueError("dataset contains no episodes")
+    if len(starts) != total_episodes:
+        raise ValueError("episode_starts and episode_lengths must have equal length")
+    if n_episodes > total_episodes:
+        raise ValueError(
+            f"requested {n_episodes} episodes, but dataset has {total_episodes}"
+        )
+    if np.any(lengths <= 0):
+        raise ValueError("episode_lengths must all be positive")
+
+    expected_starts = np.concatenate([[0], np.cumsum(lengths)[:-1]]).astype(starts.dtype)
+    if not np.array_equal(starts, expected_starts):
+        raise ValueError("episode_starts do not match episode_lengths")
+
+    end = int(starts[n_episodes - 1] + lengths[n_episodes - 1])
+    if len(data["observations"]) != len(data["actions"]):
+        raise ValueError("observations and actions must have equal length")
+    if end > len(data["observations"]):
+        raise ValueError("episode metadata extends past observations/actions")
+    return end
+
+
 def subset(data: dict, n_episodes: int) -> tuple[np.ndarray, np.ndarray]:
     """Return (obs, acts) for the first n_episodes, using episode_starts.
 
     Used by the dataset-size ablation so subsets respect episode boundaries.
     """
-    starts = data["episode_starts"]
-    lengths = data["episode_lengths"]
-    n_episodes = min(n_episodes, len(lengths))
-    end = starts[n_episodes - 1] + lengths[n_episodes - 1]
+    end = _subset_end(data, n_episodes)
     return data["observations"][:end], data["actions"][:end]
