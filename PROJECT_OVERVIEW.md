@@ -164,10 +164,32 @@ difference: 5679 (92%) vs 5946 (96%), within seed noise.
 clean labels and normalised inputs) while Ant is robust to both, so imitation
 difficulty, not state dimensionality, governs sensitivity.
 
-| Bonus | Walker2d | Ant |
-| ----- | -------- | --- |
-| E1 collapse (below half-expert) | sigma >= 0.05 | none up to sigma=0.8 |
-| E2 normalised vs raw | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x) |
+| Bonus                           | Walker2d            | Ant                  |
+| ------------------------------- | ------------------- | -------------------- |
+| E1 collapse (below half-expert) | sigma >= 0.05       | none up to sigma=0.8 |
+| E2 normalised vs raw            | 4654 vs 1163 (4.0x) | 5679 vs 5946 (~1x)   |
+
+### Bonus: SAC (off-policy expert)
+
+To experiment beyond the brief we trained SAC (off-policy, maximum-entropy) and
+compared it to the on-policy PPO experts. SAC uses a replay buffer and automatic
+entropy tuning and, unlike the PPO setup, **no VecNormalize** (running stats would
+corrupt buffered transitions), so it also yields raw-observation demonstrations.
+Hyperparameters are the rl-zoo3 MuJoCo recipe (`lr=7.3e-4`, `gamma=0.98`,
+`tau=0.02`, `train_freq`/`gradient_steps=8`, gSDE), net `[400,300]` for Ant and
+`[256,256]` for HalfCheetah, 3M steps each on CPU (`train_sac.py`).
+
+| Env                        | PPO expert (on-policy) | SAC (off-policy) |
+| -------------------------- | ---------------------- | ---------------- |
+| Ant-v4                     | 6293 @ 10M steps       | 7295 @ 3M steps  |
+| HalfCheetah-v4 (off-brief) | n/a                    | 15387 @ 3M steps |
+
+**Finding:** SAC is much more sample-efficient than PPO here. It beats the Ant PPO
+expert (7295 vs 6293) with over 3x fewer environment steps, and on HalfCheetah-v4
+it clears the 8000 stretch target by a wide margin. Ant's curve plateaus around
+7000-7300 (a 5M extension is running to confirm the asymptote); a sustained 8000
+on Ant is above typical SAC ceilings, whereas HalfCheetah, which has no fall-over
+failure mode, reaches ~15000.
 
 ## 4. Research questions (evidence-backed answers)
 

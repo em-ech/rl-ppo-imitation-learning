@@ -32,9 +32,24 @@ complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
 the from-scratch budget. The two bonus rows reinforce RQ6: Walker2d is fragile to
 imperfect imitation (collapses under small action noise, fails without obs
 normalisation) while Ant is robust to both, so imitation difficulty, not state
-dimensionality, governs sensitivity. A further bonus (off-policy SAC vs on-policy
-PPO) is set up in `train_sac.py` and the Colab runner. Full discussion (RQ1-RQ6)
-and exact E1/E2 numbers are in [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+dimensionality, governs sensitivity. A further bonus compares off-policy SAC
+against the on-policy PPO experts (see below). Full discussion (RQ1-RQ6) and exact
+E1/E2 numbers are in [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+
+## Bonus: SAC off-policy experts
+
+We also trained SAC (off-policy, maximum-entropy) and compared it to the
+on-policy PPO experts (`train_sac.py`, 20-episode deterministic eval, no
+VecNormalize). SAC is markedly more sample-efficient:
+
+| Env                        | PPO expert (on-policy) | SAC (off-policy) |
+| -------------------------- | ---------------------- | ---------------- |
+| Ant-v4                     | 6293 @ 10M steps       | 7295 @ 3M steps  |
+| HalfCheetah-v4 (off-brief) | n/a                    | 15387 @ 3M steps |
+
+SAC beats the PPO Ant expert with over 3x fewer environment steps, and on
+HalfCheetah-v4 it clears the 8000 stretch target by a wide margin. (A 5M Ant
+extension is running to probe the asymptote; the 3M policy is preserved.)
 
 ## Repository layout
 
