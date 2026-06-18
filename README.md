@@ -13,9 +13,10 @@ answers to the research questions (RQ1-RQ6) are in
 
 ## Comparison of all experiments
 
-The first five rows are the core stages (M1-M7); the last two are the bonus BC
-ablations (E1, E2; 5 seeds per point, `noise_sweep.py` / `norm_ablation.py`,
-figures in [notebook 06](notebooks/06_extended.ipynb)).
+The first five rows are the core stages (M1-M7); the rest are bonus studies: the
+E1/E2 BC ablations (5 seeds per point, `noise_sweep.py` / `norm_ablation.py`,
+figures in [notebook 06](notebooks/06_extended.ipynb)) and the off-policy SAC
+experts (`train_sac.py`). Returns are 20-episode deterministic evals.
 
 | Experiment                    | Description                                                | Walker2d                | Ant                      |
 | ----------------------------- | ---------------------------------------------------------- | ----------------------- | ------------------------ |
@@ -26,6 +27,8 @@ figures in [notebook 06](notebooks/06_extended.ipynb)).
 | BC / DAgger + PPO @1.5M       | PPO warm-started from the imitation policy                 | ~5700                   | ~6600-6900               |
 | E1: noisy expert (bonus)      | BC trained on expert actions with added Gaussian noise     | collapses by sigma=0.05 | robust through sigma=0.4 |
 | E2: obs normalisation (bonus) | BC with vs without zero-mean / unit-variance observations  | 4654 vs 1163 (4.0x)     | 5679 vs 5946 (~1x)       |
+| SAC expert (off-policy, bonus)| off-policy SAC vs PPO, same env (HalfCheetah-v4 off-brief: 15387) | n/a              | 7295 @ 3M (vs 6293)      |
+| SAC 5M extension (bonus)      | longer SAC run probing Ant's asymptote (3M policy preserved)| n/a                     | running                  |
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
 complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
