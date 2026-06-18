@@ -95,6 +95,12 @@ Sanity check:
 
 MuJoCo is bundled with `gymnasium[mujoco]`; no licence needed.
 
+Fast utility tests (no MuJoCo/Torch install needed):
+
+```bash
+uv run --python 3.11 --with numpy==1.26.4 python -m unittest discover -s tests
+```
+
 ## Reproduce from scratch
 
 Run in order. Runtimes are on an Apple Silicon laptop CPU (Colab CPU is slower;
