@@ -66,7 +66,7 @@ above Ant's practical SAC ceiling.
 ```
 notebooks/   01..06  submission notebooks (executed, figures embedded)
 src/         shared modules: config, seeding, envs, collect, bc_scratch,
-             bc_bridge, dagger, eval, plotting
+             bc_bridge, dagger, eval, plotting, sac, video
 train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
 dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
 noise_sweep.py   norm_ablation.py                       extended requirements (E1, E2)
@@ -182,8 +182,8 @@ Launch with `.venv/bin/jupyter notebook` (or open in VS Code / Colab).
 [colab/colab_runner.ipynb](colab/colab_runner.ipynb) runs the whole project on
 Colab, with a markdown description and the hyperparameter rationale for every
 section: PPO experts, demonstrations, BC, DAgger, pretraining, the extended
-studies (E1, E2), and the SAC bonus. Open it from GitHub on the
-`extended-e1-e2-and-sac-bonus` branch (until it is merged to main), set a **GPU**
+studies (E1, E2), and the SAC bonus. Open it from GitHub
+(`em-ech/rl-ppo-imitation-learning`), set a **GPU**
 runtime (helps from-scratch BC and SAC; PPO is CPU-bound and unaffected), and run
 top to bottom. Section 1 installs `requirements.txt` and asks for a one-time
 runtime restart (the numpy 1.26 pin that `imitation` forces); after restarting,

@@ -29,7 +29,9 @@ Five stages, each building on the previous one:
 5. **Imitation as PPO pretraining** (`pretraining.py`) - PPO from scratch vs PPO
    warm-started from BC / DAgger; the central sample-efficiency question.
 
-Plus M6 side-by-side expert-vs-student videos (`make_video.py`).
+Plus M6 side-by-side expert-vs-student videos (`make_video.py`) and multi-policy
+comparison videos (`make_comparison_video.py`). Bonus studies (the E1/E2 BC
+ablations and off-policy SAC) are covered in section 3.
 
 ## 2. Decision history: what we ran, why, and what changed
 
