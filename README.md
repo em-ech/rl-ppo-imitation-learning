@@ -71,7 +71,8 @@ noise_sweep.py   norm_ablation.py                       extended requirements (E
 train_sac.py     make_comparison_video.py               SAC experts; per-env policy videos
 colab/colab_runner.ipynb   full documented pipeline + extended + SAC (Colab)
 requirements.txt   PROJECT_OVERVIEW.md
-models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
+videos/      rendered comparison + expert-vs-student mp4s (tracked in the repo)
+models/ data/ outputs/ logs/           artifacts (git-ignored; in the submission zip)
 ```
 
 ## Environment setup (from scratch)

@@ -7,7 +7,7 @@ __pycache__/
 models/
 data/
 outputs/
-videos/
+videos/*
 logs/
 
 # Keep directory structure
@@ -16,6 +16,9 @@ logs/
 !outputs/.gitkeep
 !videos/.gitkeep
 !logs/.gitkeep
+
+# Keep the rendered comparison / expert-vs-student videos in the repo
+!videos/*.mp4
 
 # Build artifact (GitHub replaces the Drive-zip workflow) and the assignment PDF
 project_code.zip
