@@ -2,21 +2,20 @@
 
 For one environment, renders a deterministic episode of every available policy
 (PPO expert, library BC, DAgger, SAC) and stacks them horizontally into a single
-labelled mp4. PPO/BC/DAgger consume the expert's VecNormalize observations; SAC
-uses raw observations (it trains without VecNormalize). Ablation rows (E1/E2) and
-the pretraining-stage runs are not single deployable policies, so they are not
-rendered. Shorter rollouts are frozen on their last frame so panels stay aligned.
+mp4 with a title bar above each panel. PPO/BC/DAgger consume the expert's
+VecNormalize observations; SAC uses raw observations (it trains without
+VecNormalize). Ablation rows (E1/E2) and the pretraining-stage runs are not single
+deployable policies, so they are not rendered. Shorter rollouts are frozen on
+their last frame so panels stay aligned.
 Usage: make_comparison_video.py [ENV_ID]
 """
 import sys
 
 import gymnasium as gym
-import numpy as np
-from PIL import Image, ImageDraw
+
+from src import config, eval, seeding, video
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.policies import ActorCriticPolicy
-
-from src import config, eval, seeding
 
 ENV_ID = sys.argv[1] if len(sys.argv) > 1 else "Ant-v4"
 seeding.set_seed(0)
@@ -89,17 +88,6 @@ def rollout(predict, seed=0, max_steps=1000):
     return frames, ret
 
 
-def labelled(frames, text):
-    out = []
-    for f in frames:
-        img = Image.fromarray(f)
-        d = ImageDraw.Draw(img)
-        d.rectangle([0, 0, img.width, 16], fill=(0, 0, 0))
-        d.text((5, 3), text, fill=(255, 255, 255))
-        out.append(np.asarray(img))
-    return out
-
-
 panels = build_panels()
 if not panels:
     print(f"[cmp-video] no policies found for {ENV_ID}; nothing to render", flush=True)
@@ -116,22 +104,12 @@ def pad(frames):
     return frames[:length] if len(frames) >= length else frames + [frames[-1]] * (length - len(frames))
 
 
-tracks = [pad(labelled(fr, f"{label}  {ret:.0f}")) for label, fr, ret in rolls]
-sep = np.full((tracks[0][0].shape[0], 6, 3), 255, dtype=np.uint8)
-combined = []
-for i in range(length):
-    row = []
-    for t, track in enumerate(tracks):
-        if t:
-            row.append(sep)
-        row.append(track[i])
-    combined.append(np.concatenate(row, axis=1))
+tracks = [video.titled_track(pad(fr), f"{label}  ({ret:.0f})") for label, fr, ret in rolls]
+combined = video.stack_panels(tracks)
 
 try:
-    import imageio
     out = config.VIDEOS_DIR / f"comparison_{ENV_ID}.mp4"
-    frames = [np.ascontiguousarray(c, dtype=np.uint8) for c in combined]
-    imageio.mimwrite(str(out), frames, fps=30, codec="libx264", macro_block_size=1)
+    video.write_mp4(combined, out)
     labels = " | ".join(label for label, _, _ in rolls)
     print(f"[cmp-video] DONE -> {out} ({length} frames; {labels})", flush=True)
 except Exception as e:
