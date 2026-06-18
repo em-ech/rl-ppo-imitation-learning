@@ -28,7 +28,7 @@ experts (`train_sac.py`). Returns are 20-episode deterministic evals.
 | E1: noisy expert (bonus)       | BC trained on expert actions with added Gaussian noise            | collapses by sigma=0.05 | robust through sigma=0.4 |
 | E2: obs normalisation (bonus)  | BC with vs without zero-mean / unit-variance observations         | 4654 vs 1163 (4.0x)     | 5679 vs 5946 (~1x)       |
 | SAC expert (off-policy, bonus) | off-policy SAC vs PPO, same env (HalfCheetah-v4 off-brief: 15387) | n/a                     | 7295 @ 3M (vs 6293)      |
-| SAC 5M extension (bonus)       | longer SAC run probing Ant's asymptote (3M policy preserved)      | n/a                     | running                  |
+| SAC 5M extension (bonus)       | longer SAC run probing Ant's asymptote (stopped at 3.8M)          | n/a                     | ~7200 (no gain over 3M)  |
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
 complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
@@ -56,8 +56,10 @@ VecNormalize). SAC is markedly more sample-efficient:
 | HalfCheetah-v4 (off-brief) | n/a                    | 15387 @ 3M steps |
 
 SAC beats the PPO Ant expert with over 3x fewer environment steps, and on
-HalfCheetah-v4 it clears the 8000 stretch target by a wide margin. (A 5M Ant
-extension is running to probe the asymptote; the 3M policy is preserved.)
+HalfCheetah-v4 it clears the 8000 stretch target by a wide margin. A 5M Ant
+extension (stopped at 3.8M) confirmed the asymptote: it peaked ~7200 with no gain
+over the 3M policy, so 7295 stands as the best Ant SAC return; a sustained 8000 is
+above Ant's practical SAC ceiling.
 
 ## Repository layout
 

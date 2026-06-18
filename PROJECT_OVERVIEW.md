@@ -187,9 +187,9 @@ Hyperparameters are the rl-zoo3 MuJoCo recipe (`lr=7.3e-4`, `gamma=0.98`,
 **Finding:** SAC is much more sample-efficient than PPO here. It beats the Ant PPO
 expert (7295 vs 6293) with over 3x fewer environment steps, and on HalfCheetah-v4
 it clears the 8000 stretch target by a wide margin. Ant's curve plateaus around
-7000-7300 (a 5M extension is running to confirm the asymptote); a sustained 8000
-on Ant is above typical SAC ceilings, whereas HalfCheetah, which has no fall-over
-failure mode, reaches ~15000.
+7000-7300 (a 5M extension, stopped at 3.8M, confirmed this: it peaked ~7200 with no
+gain over the 3M policy); a sustained 8000 on Ant is above typical SAC ceilings,
+whereas HalfCheetah, which has no fall-over failure mode, reaches ~15000.
 
 ## 4. Research questions (evidence-backed answers)
 
