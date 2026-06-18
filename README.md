@@ -18,17 +18,17 @@ E1/E2 BC ablations (5 seeds per point, `noise_sweep.py` / `norm_ablation.py`,
 figures in [notebook 06](notebooks/06_extended.ipynb)) and the off-policy SAC
 experts (`train_sac.py`). Returns are 20-episode deterministic evals.
 
-| Experiment                    | Description                                                | Walker2d                | Ant                      |
-| ----------------------------- | ---------------------------------------------------------- | ----------------------- | ------------------------ |
-| PPO expert                    | the RL expert trained from scratch (oracle for students)   | 6043                    | 6293                     |
-| Library BC                    | behavioural cloning of the expert with the `imitation` lib | 5719 (95%)              | 6237 (99%)               |
-| DAgger                        | behavioural cloning with on-policy expert querying         | 6208                    | 6564                     |
-| PPO from scratch @1.5M        | PPO trained from a random start, no imitation              | ~1126                   | ~4965                    |
-| BC / DAgger + PPO @1.5M       | PPO warm-started from the imitation policy                 | ~5700                   | ~6600-6900               |
-| E1: noisy expert (bonus)      | BC trained on expert actions with added Gaussian noise     | collapses by sigma=0.05 | robust through sigma=0.4 |
-| E2: obs normalisation (bonus) | BC with vs without zero-mean / unit-variance observations  | 4654 vs 1163 (4.0x)     | 5679 vs 5946 (~1x)       |
-| SAC expert (off-policy, bonus)| off-policy SAC vs PPO, same env (HalfCheetah-v4 off-brief: 15387) | n/a              | 7295 @ 3M (vs 6293)      |
-| SAC 5M extension (bonus)      | longer SAC run probing Ant's asymptote (3M policy preserved)| n/a                     | running                  |
+| Experiment                     | Description                                                       | Walker2d                | Ant                      |
+| ------------------------------ | ----------------------------------------------------------------- | ----------------------- | ------------------------ |
+| PPO expert                     | the RL expert trained from scratch (oracle for students)          | 6043                    | 6293                     |
+| Library BC                     | behavioural cloning of the expert with the `imitation` lib        | 5719 (95%)              | 6237 (99%)               |
+| DAgger                         | behavioural cloning with on-policy expert querying                | 6208                    | 6564                     |
+| PPO from scratch @1.5M         | PPO trained from a random start, no imitation                     | ~1126                   | ~4965                    |
+| BC / DAgger + PPO @1.5M        | PPO warm-started from the imitation policy                        | ~5700                   | ~6600-6900               |
+| E1: noisy expert (bonus)       | BC trained on expert actions with added Gaussian noise            | collapses by sigma=0.05 | robust through sigma=0.4 |
+| E2: obs normalisation (bonus)  | BC with vs without zero-mean / unit-variance observations         | 4654 vs 1163 (4.0x)     | 5679 vs 5946 (~1x)       |
+| SAC expert (off-policy, bonus) | off-policy SAC vs PPO, same env (HalfCheetah-v4 off-brief: 15387) | n/a                     | 7295 @ 3M (vs 6293)      |
+| SAC 5M extension (bonus)       | longer SAC run probing Ant's asymptote (3M policy preserved)      | n/a                     | running                  |
 
 **Central finding:** imitation pretraining sharply reduces PPO's sample
 complexity, BC and DAgger warm-starts reach near-expert return at a fraction of
@@ -38,6 +38,11 @@ normalisation) while Ant is robust to both, so imitation difficulty, not state
 dimensionality, governs sensitivity. A further bonus compares off-policy SAC
 against the on-policy PPO experts (see below). Full discussion (RQ1-RQ6) and exact
 E1/E2 numbers are in [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md).
+
+Side-by-side renders of every deployable policy (PPO expert, BC, DAgger, SAC) are
+in `videos/comparison_<env>.mp4` (`make_comparison_video.py`); the ablation rows
+(E1/E2) and the pretraining-stage runs are not single policies, so they are not
+rendered.
 
 ## Bonus: SAC off-policy experts
 
@@ -63,6 +68,7 @@ src/         shared modules: config, seeding, envs, collect, bc_scratch,
 train_expert.py  collect_demos.py  bc_experiments.py  arch_sweep.py
 dagger_run.py    pretraining.py    make_video.py        run scripts (one per stage)
 noise_sweep.py   norm_ablation.py                       extended requirements (E1, E2)
+train_sac.py     make_comparison_video.py               SAC experts; per-env policy videos
 colab/colab_runner.ipynb   full documented pipeline + extended + SAC (Colab)
 requirements.txt   PROJECT_OVERVIEW.md
 models/ data/ outputs/ videos/ logs/   artifacts (git-ignored; in the submission zip)
@@ -119,6 +125,11 @@ python pretraining.py Ant-v4      Ant-v4      tuned_ant 1500000 1
 # 6. Side-by-side videos (M6)    ~1 min each
 python make_video.py Walker2d-v4 Walker2d-v4
 python make_video.py Ant-v4      Ant-v4
+
+# 6b. Multi-policy comparison videos (PPO/BC/DAgger/SAC side by side per env)
+python make_comparison_video.py Walker2d-v4
+python make_comparison_video.py Ant-v4
+python make_comparison_video.py HalfCheetah-v4
 
 # 7. Extended requirements (E1 noisy expert, E2 obs normalisation)  ~15-30 min per env
 python noise_sweep.py   Walker2d-v4
