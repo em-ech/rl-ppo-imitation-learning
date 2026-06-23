@@ -1,6 +1,6 @@
 # RL Group Project: PPO + Imitation Learning (Walker2d / Ant)
 
-**Group members:** Marco De Palma, Em Echeverria, Leah Sarouphin,
+**Group members:** Marco De Palma, Em Echeverria, Lea Sarouphim Hochar,
 Juan Jose Rincon Briceño, Matteo Mainetti
 
 A complete two-phase reinforcement learning pipeline in MuJoCo: train a PPO
